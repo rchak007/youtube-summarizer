@@ -9,7 +9,13 @@ import axios from "axios";
  */
 export async function getTranscriptFromYoutubeURL(url: string): Promise<string> {
   try {
-    const response = await axios.post("http://localhost:5001/transcript", { url });
+    // const response = await axios.post("http://localhost:5001/transcript", { url });
+
+    const response = await axios.post("https://youtube-transcript-server-kepn.onrender.com/transcript", {
+        url
+      });
+      
+
     return response.data.transcript;
   } catch (err: any) {
     throw new Error(`Failed to fetch transcript: ${err.message}`);
