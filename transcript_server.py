@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from youtube_transcript_api import YouTubeTranscriptApi
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -33,4 +34,5 @@ def extract_video_id(url):
     return match.group(1) if match else None
 
 if __name__ == "__main__":
-    app.run(port=5001)
+    # app.run(port=5001)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5001)))
