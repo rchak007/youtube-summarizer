@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>YouTube Transcript Summarizer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f9f9f9;
+    }
+    h2 {
+      color: #333;
+    }
+    input[type="text"], select {
+      width: 60%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      margin-left: 10px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    pre {
+      white-space: pre-wrap;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 2rem;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    label {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>YouTube Transcript Summarizer</h2>
+  <form id="ytForm">
+    <input type="text" id="ytLink" placeholder="https://www.youtube.com/watch?v=..." required />
+    
+    <br><br>
+    <label for="summaryLevel">Summary Type:</label>
+    <select id="summaryLevel">
+      <option value="brief">Brief (5–7 bullets)</option>
+      <option value="detailed" selected>Detailed (overview + 10–15 bullets)</option>
+      <option value="deep">Deep Dive (long, structured)</option>
+    </select>
+
+    <button type="submit">Summarize</button>
+  </form>
+
+  <pre id="output"></pre>
+
+  <script>
+    document.getElementById("ytForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const url = document.getElementById("ytLink").value;
+      const level = document.getElementById("summaryLevel").value;
+
+      const res = await fetch("/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, level })
+      });
+
+      const data = await res.json();
+      document.getElementById("output").innerHTML = formatAsList(data.summary);
+    });
+
+    function formatAsList(text) {
+      return text
+        .split(/\n+/)
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => line.replace(/^[-•*]\s*/, "🔹 "))
+        .join("\n");
+    }
+  </script>
+</body>
+</html>
+

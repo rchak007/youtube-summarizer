@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YouTube Transcript Summarizer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 2rem 3rem;
+      margin-top: 4rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      max-width: 800px;
+      width: 90%;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: #333;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .subtext {
+      font-size: 0.95rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #666;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 15px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      background: #f8f8f8;
+      padding: 1.5rem;
+      border-radius: 10px;
+      margin-top: 2rem;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.08);
+      font-size: 15px;
+      line-height: 1.6;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="text-align: right; font-size: 14px;">
+        <label for="apiKey">🔐 API Key:</label>
+        <input type="text" id="apiKey" placeholder="Enter key..." style="padding: 6px; width: 180px; margin-bottom: 10px;" />
+    </div>
+
+    <h1>📺 YouTube Transcript Summarizer</h1>
+    <div class="subtext">Paste a YouTube URL and choose the depth of summary</div>
+    <form id="ytForm">
+      <label for="ytLink">YouTube URL:</label>
+      <input type="text" id="ytLink" placeholder="https://www.youtube.com/watch?v=..." required />
+
+      <label for="summaryLevel">Summary Type:</label>
+      <select id="summaryLevel">
+        <option value="brief">Brief (5–7 bullets)</option>
+        <option value="detailed" selected>Detailed (overview + 10–15 bullets)</option>
+        <option value="deep">Deep Dive (long, structured)</option>
+      </select>
+
+      <button type="submit">🧠 Summarize</button>
+    </form>
+
+    <!-- <pre id="output"></pre> -->
+    <div id="output" style="margin-top: 2rem; background: #fefefe; padding: 1.5rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05); line-height: 1.6;"></div>
+
+  </div>
+
+  <script>
+    document.getElementById("ytForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const url = document.getElementById("ytLink").value;
+      const level = document.getElementById("summaryLevel").value;
+
+      const res = await fetch("/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // body: JSON.stringify({ url, level })
+        body: JSON.stringify({
+            url,
+            level,
+            apiKey: document.getElementById("apiKey").value.trim()
+            })
+      });
+
+      const outputEl = document.getElementById("output");
+
+      if (!res.ok) {
+        const error = await res.json();
+        outputEl.innerHTML = `❌ ${error.error || "Something went wrong"}`;
+        return;
+      }
+
+      const data = await res.json();
+      document.getElementById("output").innerHTML = formatAsList(data.summary);
+    });
+
+    function formatAsList(text) {
+        return text
+            .split(/\n+/)
+            .map(line => {
+            if (/^\*\*Chunk\s+\d+\s+Summary:\*\*/i.test(line)) {
+                // Convert **Chunk 1 Summary:** to ## Chunk 1 Summary
+                return `<h3 style="margin-top: 1.5em;">${line.replace(/\*\*/g, '').replace(':', '')}</h3>`;
+            }
+            if (/^[-•*]/.test(line)) {
+                return `<li>${line.replace(/^[-•*]\s*/, "")}</li>`;
+            }
+            if (/^🔹/.test(line)) {
+                return `<li>${line.replace(/^🔹\s*/, "")}</li>`;
+            }
+            return `<p>${line}</p>`;
+            })
+            .join("");
+}
+
+
+  </script>
+</body>
+</html>
